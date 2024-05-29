@@ -1,10 +1,10 @@
 /*
-author: lowko527 
+author: lowko527
 about problem: standard knapsack, recursive impl wiht full 2D table memo (non map)
 time complexity: O(N*C)
-mem complexity: O(N*C) 
-usage instruction: provdies function kanpsack to solve, see desc 
-assumptions: 
+mem complexity: O(N*C)
+usage instruction: provdies function kanpsack to solve, see desc
+assumptions:
 */
 
 
@@ -17,8 +17,8 @@ const char nl = '\n';
 #endif
 
 template<typename T>
-void prp(vector<pair<T,T>>& a) {
-    for (auto &p : a) {
+void prp(vector<pair<T, T>>& a) {
+    for (auto& p : a) {
         cout << "{" << p.first << " " << p.second << "}" << " ";
     }
     cout << nl;
@@ -40,21 +40,17 @@ int knapsackRecursive(const vector<Item>& items, int capacity, int currentIndex,
     if (dp[currentIndex][capacity] != -1) {
         return dp[currentIndex][capacity];
     }
+
     if (items[currentIndex].weight > capacity) {
-        return knapsackRecursive(items, capacity, currentIndex - 1, dp);
-    }
-
-    // either pick or skip item 
-    int includeItem = items[currentIndex].value +
-        knapsackRecursive(items, capacity - items[currentIndex].weight, currentIndex - 1, dp);
-    int excludeItem = knapsackRecursive(items, capacity, currentIndex - 1, dp);
-
-    // Memoization
-    if (includeItem > excludeItem) {
-        dp[currentIndex][capacity] = includeItem;
+        dp[currentIndex][capacity] = knapsackRecursive(items, capacity, currentIndex - 1, dp);
     }
     else {
-        dp[currentIndex][capacity] = excludeItem;
+        // either pick or skip item 
+        int includeItem = items[currentIndex].value +
+            knapsackRecursive(items, capacity - items[currentIndex].weight, currentIndex - 1, dp);
+        int excludeItem = knapsackRecursive(items, capacity, currentIndex - 1, dp);
+
+        dp[currentIndex][capacity] = max(includeItem, excludeItem);
     }
 
     return dp[currentIndex][capacity];
@@ -82,14 +78,23 @@ int knapsack(const vector<Item>& items, int capacity, vector<Item>& selectedItem
 
     // reconstruct
     int remainingCapacity = capacity;
-    for (int i = n - 1; i >= 0 && maxValue > 0; --i) {
+    int startIndex = -1;
+    for (int i = n - 1; i >= 0; --i) {
+        if (dp[i][remainingCapacity] == maxValue) {
+            startIndex = i;
+            break;
+        }
+    }
+
+    // Reconstruct selected items
+    for (int i = startIndex; i >= 0 && maxValue > 0; --i) {
         if (i == 0 || dp[i][remainingCapacity] != dp[i - 1][remainingCapacity]) {
             selectedItems.push_back(items[i]);
             maxValue -= items[i].value;
             remainingCapacity -= items[i].weight;
         }
     }
-    return dp[n - 1][capacity];
+    return maxValue;
 }
 
 
@@ -105,7 +110,7 @@ int main() {
         vector<Item> selectedItems;
         int maxVal = knapsack(itemNo, C, selectedItems);
         cout << selectedItems.size() << nl;
-        for (auto ite: selectedItems) {
+        for (auto ite : selectedItems) {
             cout << ite.index << " ";
         }
         cout << nl;
